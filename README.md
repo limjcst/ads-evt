@@ -1,7 +1,7 @@
 # Anomaly Detection in Streams with Extreme Value Theory
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![GitHub Actions](https://github.com/limjcst/ads-evt/workflows/SPOT/badge.svg)](https://github.com/limjcst/ads-evt/actions)
+[![GitHub Actions](https://github.com/limjcst/ads-evt/workflows/Actions/badge.svg)](https://github.com/limjcst/ads-evt/actions)
 
 This repository wraps the original implementation of [SPOT published in KDD'17](https://github.com/Amossys-team/SPOT) as an installable package.
 We refactor the original one, removing duplicated code.
