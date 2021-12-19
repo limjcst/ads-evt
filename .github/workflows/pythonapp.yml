@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
 
     steps:
     - uses: actions/checkout@v2
@@ -22,7 +22,6 @@ jobs:
         python -m pip install --upgrade pip 
         python -m pip install -r requirements-dev.txt
     - name: Lint with pylint
-      if: ${{ matrix.python-version >= 3 }}
       run: |
         pylint ads_evt/ tests/test_*
     - name: Unit test
