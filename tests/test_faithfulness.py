@@ -96,7 +96,7 @@ def _compare(model: spot.SPOTBase, model_origin: spot.SPOTBase, dataset: Dataset
         results.append(alg.run())
 
     for key in results[0]:
-        assert results[0][key] == pytest.approx(results[1][key])
+        assert results[0][key] == pytest.approx(results[1][key], nan_ok=True)
 
 
 @pytest.mark.parametrize(
