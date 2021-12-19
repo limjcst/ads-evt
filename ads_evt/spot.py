@@ -11,7 +11,6 @@ import json
 import logging
 from typing import Callable
 from typing import List
-from typing import Sequence
 from typing import Tuple
 from typing import TypeVar
 from typing import Union
@@ -645,12 +644,12 @@ class biSPOT(SPOTBase):
         )
 
 
-def moving_average(data: Sequence[float], window: int) -> np.ndarray:
+def moving_average(data: np.ndarray, window: int) -> np.ndarray:
     """
     Moving average of the given data
     """
     mean: List[float] = []
-    accumulation = sum(data[:window])
+    accumulation: float = data[:window].sum()
     mean.append(accumulation / window)
     for i in range(window, len(data)):
         accumulation = accumulation - data[i - window] + data[i]
