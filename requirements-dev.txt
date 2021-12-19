@@ -1,0 +1,9 @@
+-r requirements.txt
+
+tqdm
+
+black
+pylint
+
+coverage
+pytest
