@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 import ads_evt as spot
+from ads_evt.spot import moving_average
 
 from .spot_origin import spot as spot_origin
 
@@ -88,6 +89,25 @@ class Dataset:
         return Dataset(init_data=init_data, data=data, proba=1e-5, depth=10)
 
 
+@pytest.mark.parametrize(
+    "dataset",
+    [
+        Dataset.prepare_physics(),
+        Dataset.prepare_rain(),
+        Dataset.prepare_mawi(),
+        Dataset.prepare_edf_stocks(),
+    ],
+)
+def test_moving_average(dataset: Dataset):
+    """
+    ads_evt.spot.moving_average shall behave the same as backMean
+    """
+    np.testing.assert_array_equal(
+        moving_average(dataset.data, dataset.depth),
+        spot_origin.backMean(dataset.data, dataset.depth),
+    )
+
+
 def _compare(model: spot.SPOTBase, model_origin: spot.SPOTBase, dataset: Dataset):
     results = []
     for alg in [model, model_origin]:
@@ -96,7 +116,7 @@ def _compare(model: spot.SPOTBase, model_origin: spot.SPOTBase, dataset: Dataset
         results.append(alg.run())
 
     for key in results[0]:
-        assert results[0][key] == pytest.approx(results[1][key], rel=1e-4, nan_ok=True)
+        assert results[0][key] == pytest.approx(results[1][key], nan_ok=True)
 
 
 @pytest.mark.parametrize(
