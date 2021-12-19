@@ -95,14 +95,14 @@ def _compare(model: spot.SPOTBase, model_origin: spot.SPOTBase, dataset: Dataset
         alg.initialize()
         results.append(alg.run())
 
-    assert results[0] == results[0]
+    for key in results[0]:
+        assert results[0][key] == pytest.approx(results[1][key])
 
 
 @pytest.mark.parametrize(
     "dataset",
     [
         Dataset.prepare_physics(),
-        Dataset.prepare_rain(),
         Dataset.prepare_mawi(),
         Dataset.prepare_edf_stocks(),
     ],
@@ -124,3 +124,18 @@ def test_spot(dataset: Dataset):
         spot_origin.bidSPOT(q=dataset.proba, depth=dataset.depth),
         dataset,
     )
+
+
+def test_no_peaks():
+    """
+    biSPOT shall handle no initial peaks, while the original one will raise error
+    """
+    dataset = Dataset.prepare_rain()
+    with pytest.raises(ValueError):
+        alg = spot_origin.biSPOT(q=dataset.proba)
+        alg.fit(init_data=dataset.init_data, data=dataset.data)
+        alg.initialize()
+    alg = spot.biSPOT(q=dataset.proba)
+    alg.fit(init_data=dataset.init_data, data=dataset.data)
+    alg.initialize()
+    _ = alg.run()

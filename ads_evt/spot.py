@@ -13,6 +13,7 @@ from typing import Callable
 from typing import List
 from typing import Sequence
 from typing import Tuple
+from typing import TypeVar
 from typing import Union
 
 import matplotlib.pyplot as plt
@@ -21,11 +22,14 @@ import pandas as pd
 from scipy.optimize import minimize
 
 
-def _asc_key(value: float) -> float:
+_Template = TypeVar("_Template")
+
+
+def _asc_key(value: _Template) -> _Template:
     return value
 
 
-def _desc_key(value: float) -> float:
+def _desc_key(value: _Template) -> _Template:
     return -value
 
 
@@ -47,7 +51,7 @@ class ExtremeValue:
         self,
         q: float = 1e-4,
         n_points: int = 10,
-        key: Callable[[float], float] = _asc_key,
+        key: Callable[[_Template], _Template] = _asc_key,
     ):
         """
         Constructor
@@ -273,11 +277,15 @@ class ExtremeValue:
         self._logger.debug("Number of peaks : %s", self.num_peaks)
         self._logger.debug("Grimshaw maximum log-likelihood estimation ... ")
 
-        gamma, sigma, ll = self._grimshaw(self._peaks)
-        self._extreme_quantile = self._quantile(data.size, gamma, sigma)
-        self._logger.debug(
-            "gamma = %s, sigma = %s, log-likelihood = %s", gamma, sigma, ll
-        )
+        if self._peaks.size:
+            gamma, sigma, ll = self._grimshaw(self._peaks)
+            self._extreme_quantile = self._quantile(data.size, gamma, sigma)
+            self._logger.debug(
+                "gamma = %s, sigma = %s, log-likelihood = %s", gamma, sigma, ll
+            )
+        else:
+            self._extreme_quantile = self._init_threshold
+            self._logger.warning("Initialized with no peaks")
         self._logger.debug(
             "Extreme quantile (probability = %s): %s",
             self._proba,
@@ -589,8 +597,6 @@ class biSPOT(SPOTBase):
         }
         for key, ev in self._ev.items():
             ev.initialize(data=data, init_threshold=init_thresholds[key])
-        for ev in self._ev.values():
-            ev.initialize(data=data, level=level)
         self._num = data.size
 
     def run(self, with_alarm: bool = True) -> dict:
@@ -627,7 +633,7 @@ class biSPOT(SPOTBase):
             }
             if ExtremeValue.Status.ALARM in ret:
                 alarms.append(i)
-            elif ExtremeValue.Status.ABNORMAL in ret:
+            else:
                 self._num += 1
             for key, ev in self._ev.items():
                 thresholds[key].append(ev.extreme_quantile)
@@ -698,7 +704,10 @@ class dSPOT(SPOT):
         # Loop over the stream
         for i, datum in enumerate(self._data):
             mean = window.mean()
-            if self._ev.run(datum - mean, self._num, with_alarm=with_alarm):
+            if (
+                self._ev.run(datum - mean, self._num, with_alarm=with_alarm)
+                == ExtremeValue.Status.ALARM
+            ):
                 alarms.append(i)
             else:
                 self._num += 1
