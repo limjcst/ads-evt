@@ -194,17 +194,23 @@ class ExtremeValue:
             jac_vs = (1 / t) * (-vs + np.mean(1 / s ** 2))
             return us * jac_vs + vs * jac_us
 
-        Ym = peaks.min()
-        YM = peaks.max()
-        Ymean = peaks.mean()
+        y_min: float = peaks.min()
+        if not y_min:
+            y_min = epsilon
+        y_max: float = peaks.max()
+        if not y_max:
+            y_max = epsilon
+        y_mean: float = peaks.mean()
+        if not y_mean:
+            y_mean = epsilon
 
-        a = -1 / YM
+        a = -1 / y_max
         if abs(a) < 2 * epsilon:
             epsilon = abs(a) / self._n_points
 
         a = a + epsilon
-        b = 2 * (Ymean - Ym) / (Ymean * Ym)
-        c = 2 * (Ymean - Ym) / (Ym ** 2)
+        b = 2 * (y_mean - y_min) / (y_mean * y_min)
+        c = 2 * (y_mean - y_min) / (y_min ** 2)
 
         # We look for possible roots
         left_zeros = self._roots_finder(
@@ -215,20 +221,22 @@ class ExtremeValue:
             "regular",
         )
 
-        right_zeros = self._roots_finder(
-            _w,
-            _jac_w,
-            (b, c),
-            self._n_points,
-            "regular",
-        )
-
-        # all the possible roots
-        zeros = np.concatenate((left_zeros, right_zeros))
+        if c > b:
+            right_zeros = self._roots_finder(
+                _w,
+                _jac_w,
+                (b, c),
+                self._n_points,
+                "regular",
+            )
+            # all the possible roots
+            zeros = np.concatenate((left_zeros, right_zeros))
+        else:
+            zeros = left_zeros
 
         # 0 is always a solution so we initialize with it
         gamma_best = 0
-        sigma_best = Ymean
+        sigma_best = y_mean
         ll_best = self._log_likelihood(peaks, gamma_best, sigma_best)
 
         # we look for better candidates
