@@ -51,6 +51,7 @@ class ExtremeValue:
         q: float = 1e-4,
         n_points: int = 10,
         key: Callable[[_Template], _Template] = _asc_key,
+        logging_level: int = logging.WARNING,
     ):
         """
         Constructor
@@ -70,6 +71,7 @@ class ExtremeValue:
         self._logger = logging.getLogger(
             f"{self.__class__.__module__}.{self.__class__.__name__}"
         )
+        self._logger.setLevel(level=logging_level)
 
     @property
     def extreme_quantile(self) -> float:
@@ -194,17 +196,15 @@ class ExtremeValue:
             jac_vs = (1 / t) * (-vs + np.mean(1 / s ** 2))
             return us * jac_vs + vs * jac_us
 
-        Ym = peaks.min()
-        YM = peaks.max()
-        Ymean = peaks.mean()
+        y_min: float = peaks.min()
+        y_max: float = peaks.max()
+        y_mean: float = peaks.mean()
 
-        a = -1 / YM
+        a = -1 / y_max
         if abs(a) < 2 * epsilon:
             epsilon = abs(a) / self._n_points
 
         a = a + epsilon
-        b = 2 * (Ymean - Ym) / (Ymean * Ym)
-        c = 2 * (Ymean - Ym) / (Ym ** 2)
 
         # We look for possible roots
         left_zeros = self._roots_finder(
@@ -215,20 +215,24 @@ class ExtremeValue:
             "regular",
         )
 
-        right_zeros = self._roots_finder(
-            _w,
-            _jac_w,
-            (b, c),
-            self._n_points,
-            "regular",
-        )
-
-        # all the possible roots
-        zeros = np.concatenate((left_zeros, right_zeros))
+        if y_mean > y_min > 0:
+            b = 2 * (y_mean - y_min) / (y_mean * y_min)
+            c = 2 * (y_mean - y_min) / (y_min ** 2)
+            right_zeros = self._roots_finder(
+                _w,
+                _jac_w,
+                (b, c),
+                self._n_points,
+                "regular",
+            )
+            # all the possible roots
+            zeros = np.concatenate((left_zeros, right_zeros))
+        else:
+            zeros = left_zeros
 
         # 0 is always a solution so we initialize with it
         gamma_best = 0
-        sigma_best = Ymean
+        sigma_best = y_mean
         ll_best = self._log_likelihood(peaks, gamma_best, sigma_best)
 
         # we look for better candidates
@@ -284,7 +288,7 @@ class ExtremeValue:
             )
         else:
             self._extreme_quantile = self._init_threshold
-            self._logger.warning("Initialized with no peaks")
+            self._logger.info("Initialized with no peaks")
         self._logger.debug(
             "Extreme quantile (probability = %s): %s",
             self._proba,
@@ -338,7 +342,7 @@ class SPOTBase(ABC):
     AIR_FORCE_BLUE = "#5D8AA8"
     _plot_keys = ()
 
-    def __init__(self):
+    def __init__(self, logging_level: int = logging.WARNING):
         self._data: np.ndarray = None
         self._init_data: np.ndarray = None
         self._num: int = 0
@@ -346,6 +350,7 @@ class SPOTBase(ABC):
         self._logger = logging.getLogger(
             f"{self.__class__.__module__}.{self.__class__.__name__}"
         )
+        self._logger.setLevel(level=logging_level)
 
     def summary(self) -> dict:
         """
@@ -491,7 +496,9 @@ class SPOT(SPOTBase):
 
     _plot_keys = ("thresholds",)
 
-    def __init__(self, q: float = 1e-4, n_points: int = 10):
+    def __init__(
+        self, q: float = 1e-4, n_points: int = 10, logging_level: int = logging.WARNING
+    ):
         """
         Constructor
 
@@ -499,8 +506,8 @@ class SPOT(SPOTBase):
             q: Detection level (risk)
             n_points: maximum number of candidates for maximum likelihood (default : 10)
         """
-        super().__init__()
-        self._ev = ExtremeValue(q=q, n_points=n_points)
+        super().__init__(logging_level=logging_level)
+        self._ev = ExtremeValue(q=q, n_points=n_points, logging_level=logging_level)
 
     def summary(self) -> dict:
         report = super().summary()
@@ -564,7 +571,9 @@ class biSPOT(SPOTBase):
 
     _plot_keys = ("upper_thresholds", "lower_thresholds")
 
-    def __init__(self, q: float = 1e-4, n_points: int = 10):
+    def __init__(
+        self, q: float = 1e-4, n_points: int = 10, logging_level: int = logging.WARNING
+    ):
         """
         Constructor
 
@@ -572,10 +581,14 @@ class biSPOT(SPOTBase):
             q: Detection level (risk)
             n_points: maximum number of candidates for maximum likelihood (default : 10)
         """
-        super().__init__()
+        super().__init__(logging_level=logging_level)
         self._ev = {
-            "upper": ExtremeValue(q=q, n_points=n_points, key=_asc_key),
-            "lower": ExtremeValue(q=q, n_points=n_points, key=_desc_key),
+            "upper": ExtremeValue(
+                q=q, n_points=n_points, key=_asc_key, logging_level=logging_level
+            ),
+            "lower": ExtremeValue(
+                q=q, n_points=n_points, key=_desc_key, logging_level=logging_level
+            ),
         }
 
     def summary(self) -> dict:
@@ -662,7 +675,13 @@ class dSPOT(SPOT):
     This class allows to run DSPOT algorithm on univariate dataset (upper-bound)
     """
 
-    def __init__(self, q: float = 1e-4, n_points: int = 10, depth: int = 10):
+    def __init__(
+        self,
+        q: float = 1e-4,
+        n_points: int = 10,
+        depth: int = 10,
+        logging_level: int = logging.WARNING,
+    ):
         """
         Constructor
 
@@ -671,7 +690,7 @@ class dSPOT(SPOT):
             n_points: maximum number of candidates for maximum likelihood (default : 10)
             depth: Number of observations to compute the moving average
         """
-        super().__init__(q=q, n_points=n_points)
+        super().__init__(q=q, n_points=n_points, logging_level=logging_level)
         self._depth = depth
 
     def initialize(self, level: float = 0.98):
@@ -722,7 +741,13 @@ class bidSPOT(biSPOT):
     This class allows to run biDSPOT algorithm on univariate dataset (upper and lower bounds)
     """
 
-    def __init__(self, q: float = 1e-4, n_points: int = 10, depth: int = 10):
+    def __init__(
+        self,
+        q: float = 1e-4,
+        n_points: int = 10,
+        depth: int = 10,
+        logging_level: int = logging.WARNING,
+    ):
         """
         Constructor
 
@@ -731,7 +756,7 @@ class bidSPOT(biSPOT):
             n_points: maximum number of candidates for maximum likelihood (default : 10)
             depth: Number of observations to compute the moving average
         """
-        super().__init__(q=q, n_points=n_points)
+        super().__init__(q=q, n_points=n_points, logging_level=logging_level)
         self._depth = depth
 
     def initialize(self, level: float = 0.98):
