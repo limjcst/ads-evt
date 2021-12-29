@@ -201,7 +201,7 @@ class ExtremeValue:
         y_mean: float = peaks.mean()
 
         a = -1 / y_max
-        if abs(a) < 2 * epsilon:
+        if abs(a) < 3 * epsilon:
             epsilon = abs(a) / self._n_points
 
         a = a + epsilon
