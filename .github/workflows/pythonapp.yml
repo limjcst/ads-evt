@@ -24,7 +24,7 @@ jobs:
         git submodule update --init
     - name: Lint with pylint
       run: |
-        pylint ads_evt/ tests/test_*
+        pylint ads_evt/ tests/
     - name: Unit test
       run: |
         coverage run
