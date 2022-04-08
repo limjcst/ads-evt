@@ -9,7 +9,7 @@ with open("requirements.txt", "r", encoding="UTF-8") as requirements:
 
 setuptools.setup(
     name="ads-evt",
-    version="0.0.3.dev0",
+    version="0.0.4.dev0",
     author="limjcst",
     description="Anomaly Detection in Streams with Extreme Value Theory",
     long_description=long_description,
