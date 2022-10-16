@@ -1,9 +1,16 @@
 """
 Test suites for spot
 """
+import csv
+import os
+
 import numpy as np
 
+from ads_evt import biSPOT
 from ads_evt.spot import ExtremeValue
+
+
+_BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def test_zero_peaks():
@@ -39,3 +46,16 @@ def test_large_peak():
     # However, roots will be searched in [((a + epsilon) + epsilon), -epsilon]
     # Hence, the maximum peak between 0.33e8 and 0.5e8 will lead to failure
     evt.initialize(np.array([0.4e8]), init_threshold=1.0)
+
+
+def test_close_mean_and_min():
+    """
+    When y_mean and y_min are almost the same due to floating point errors,
+    ExtremeValue should not raise errors
+    """
+    with open(os.path.join(_BASE_DIR, "sample.csv"), encoding="UTF-8") as obj:
+        data = np.array(list(csv.reader(obj)), dtype=float)
+    model = biSPOT()
+    model.fit(init_data=data[:-5, 0], data=data[-5:, 0])
+    model.initialize()
+    _ = model.run(with_alarm=False)

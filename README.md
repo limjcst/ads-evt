@@ -2,6 +2,9 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub Actions](https://github.com/limjcst/ads-evt/workflows/Actions/badge.svg)](https://github.com/limjcst/ads-evt/actions)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/36d800e0313a2366d172/test_coverage)](https://codeclimate.com/github/limjcst/ads-evt/test_coverage)
+[![PyPI version](https://badge.fury.io/py/ads-evt.svg)](https://badge.fury.io/py/ads-evt)
+[![Downloads](https://pepy.tech/badge/ads-evt)](https://pepy.tech/project/ads-evt)
 
 This repository wraps the original implementation of [SPOT published in KDD'17](https://github.com/Amossys-team/SPOT) as an installable package.
 We refactor the original one, removing duplicated code.

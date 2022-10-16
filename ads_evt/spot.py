@@ -129,7 +129,7 @@ class ExtremeValue:
         def _object(variable: np.ndarray) -> Tuple[float, np.ndarray]:
             value = np.array([fun(item) for item in variable])
             gradient = np.array([jac(item) for item in variable])
-            return (value ** 2).sum(), 2 * value * gradient
+            return (value**2).sum(), 2 * value * gradient
 
         opt = minimize(
             _object,
@@ -193,7 +193,7 @@ class ExtremeValue:
             us = _u(s)
             vs = _v(s)
             jac_us = (1 / t) * (1 - vs)
-            jac_vs = (1 / t) * (-vs + np.mean(1 / s ** 2))
+            jac_vs = (1 / t) * (-vs + np.mean(1 / s**2))
             return us * jac_vs + vs * jac_us
 
         y_min: float = peaks.min()
@@ -215,9 +215,9 @@ class ExtremeValue:
             "regular",
         )
 
-        if y_mean > y_min > 0:
+        if y_mean > y_min > 0 and not np.isclose(y_mean, y_min):
             b = 2 * (y_mean - y_min) / (y_mean * y_min)
-            c = 2 * (y_mean - y_min) / (y_min ** 2)
+            c = 2 * (y_mean - y_min) / (y_min**2)
             right_zeros = self._roots_finder(
                 _w,
                 _jac_w,
