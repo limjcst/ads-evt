@@ -561,7 +561,7 @@ class SPOT(SPOTBase):
 
             thresholds.append(self._ev.extreme_quantile)  # thresholds record
 
-        return dict(thresholds=thresholds, alarms=alarms)
+        return {"thresholds": thresholds, "alarms": alarms}
 
 
 class biSPOT(SPOTBase):
@@ -650,11 +650,11 @@ class biSPOT(SPOTBase):
             for key, ev in self._ev.items():
                 thresholds[key].append(ev.extreme_quantile)
 
-        return dict(
-            upper_thresholds=thresholds["upper"],
-            lower_thresholds=thresholds["lower"],
-            alarms=alarms,
-        )
+        return {
+            "upper_thresholds": thresholds["upper"],
+            "lower_thresholds": thresholds["lower"],
+            "alarms": alarms,
+        }
 
 
 def moving_average(data: np.ndarray, window: int) -> np.ndarray:
@@ -805,8 +805,8 @@ class bidSPOT(biSPOT):
             for key, ev in self._ev.items():
                 thresholds[key].append(ev.extreme_quantile + mean)
 
-        return dict(
-            upper_thresholds=thresholds["upper"],
-            lower_thresholds=thresholds["lower"],
-            alarms=alarms,
-        )
+        return {
+            "upper_thresholds": thresholds["upper"],
+            "lower_thresholds": thresholds["lower"],
+            "alarms": alarms,
+        }
